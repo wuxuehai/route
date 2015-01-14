@@ -1,0 +1,86 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>修改权限|<{$configcache['Title']}></title>
+<link rel="stylesheet" type="text/css" href="__PUBLIC__/css/content.css"  />
+<link rel="stylesheet" type="text/css" href="__PUBLIC__/css/public.css"  />
+<script type="text/javascript" src="__PUBLIC__/js/jquery.js"></script>
+<script type="text/javascript" src="__PUBLIC__/js/Public.js"></script>
+<script type="text/javascript" src="__PUBLIC__/js/winpop.js"></script>
+<script type="text/javascript" src="__PUBLIC__/js/check.js"></script>
+<script>
+$(document).ready(function() {
+	$('.button').click(function() {
+        var pid = $('#pid').val(),
+            name = $('#name').val(),
+            title = $('#title').val(),
+            remark = $('#remark').val(),
+            status = $('#status').val(),
+            level = $('#level').val();
+		
+		if (!tcheck(pid,'number','ID获取失败，请刷新页面')) { return false; }
+		if (!tcheck(name,'','请输入{$type}名称')) { return false; }
+		if (!tcheck(title,'','请输入{$type}标题')) { return false; }
+		if (!tcheck(remark,'','请输入{$type}描述')) { return false; }
+		if (!tcheck(status,'number','ID获取失败，请刷新页面')) { return false; }
+		if (!tcheck(level,'number','ID获取失败，请刷新页面')) { return false; }
+		
+		wintq('正在添加，请稍后...',4,20000,0,'');
+		$.ajax({
+			url:"{:U('Home/Rbac/addNode')}",
+			dataType:'json',
+			type:'POST',
+			data:{pid:pid,name:name,title:title,remark:remark,status:status,level:level},
+			success: function(data) {
+				if (data.status==1) {
+					wintq(data.info,1,1500,0,'parent');
+				}else {
+					wintq(data.info,3,1500,1,'');
+				}
+			}
+		});
+	});
+});
+</script>
+</head>
+<body>
+<div id="content">
+	<dl id="dl">
+    	<dt>添加权限信息</dt>
+        <dd>
+        	<span class="dd_left">权限分类：</span>
+            <span class="dd_right">
+            	<select name="pid" id="pid" class="select">
+                	<option value="0">顶级目录</option>
+                    <foreach name='node_list' item='list'>
+                    <option  value="{$list.id}" <if condition="$list['id'] eq $pid">selected</if> >{$list.title}</option>
+                    <foreach name="list['_child']" item='child_list'>
+                        <option  value="{$child_list.id}" <if condition="$child_list['id'] eq $pid">selected</if> >&nbsp;&nbsp;{$child_list.title}</option>
+                    </foreach>
+                    </foreach>
+                </select><font>* 选择所属目录</font>
+            </span>
+        </dd>
+        <dd>
+        	<span class="dd_left">{$type}名称：</span>
+        	<span class="dd_right"><input type="text" name="name" id="name" class="qtext" /><font>* 请输入程序实际名称[不能为中文]</font></span>
+        </dd>
+        <dd>
+            <span class="dd_left">{$type}标题：</span>
+            <span class="dd_right"><input type="text" name="title" id="title" class="qtext" /><font>* 请输入程序中文名称</font></span>
+        </dd>
+        <dd>
+        	<span class="dd_left">{$type}描述：</span>
+            <span class="dd_right"><textarea name="remark" id="remark"  class="textarea"></textarea></span>
+        </dd>
+        <dd>
+        	<span class="dd_left">状态：</span>
+            <span class="dd_right"><label><input type="radio" name="status" id="status" value="1" <if condition="$result['Status'] eq 0">checked</if> /> 正常</label><label><input type="radio" name="status" value="0" <if condition="$result['Status'] eq 1">checked</if> /> 锁定</label><font>* 提示：如果没有修改任何信息，则会提示“数据修改失败”</font></span>
+        </dd>
+        <input type="hidden" name="level" id="level" value="{$level}" />
+        <dd><input type="button" class="button" value="提 交" /></dd>
+    </dl>
+</div>
+</body>
+</html>

@@ -1,0 +1,12 @@
+@charset "utf-8";
+.Wdate{
+	border:#999 1px solid;
+	height:20px;
+	background:#fff url(datePicker.png) no-repeat 166px;
+    width:150px;
+}
+
+.WdateFmtErr{
+	font-weight:bold;
+	color:red;
+}

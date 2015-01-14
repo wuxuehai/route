@@ -1,0 +1,165 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>添加广告|<{$configcache['Title']}></title>
+<link rel="stylesheet" type="text/css" href="__PUBLIC__/css/content.css"  />
+<link rel="stylesheet" type="text/css" href="__PUBLIC__/css/public.css"  />
+<link rel="stylesheet" type="text/css" href="__PUBLIC__/uploadify/uploadify.css"  />
+<script type="text/javascript" src="__PUBLIC__/js/jquery.js"></script>
+<script type="text/javascript" src="__PUBLIC__/js/Public.js"></script>
+<script type="text/javascript" src="__PUBLIC__/js/winpop.js"></script>
+<script type="text/javascript" src="__PUBLIC__/js/check.js"></script>
+<script type="text/javascript" src="__PUBLIC__/ueditor1_4_3-utf8-php/ueditor.config.js"></script>
+<script type="text/javascript" src="__PUBLIC__/ueditor1_4_3-utf8-php/ueditor.all.min.js"></script>
+<script type="text/javascript" src="__PUBLIC__/uploadify/jquery.uploadify.min.js"></script>
+<script>
+$(document).ready(function() {
+    /*uplodify上传插件*/
+    $("#file").uploadify({
+        /*注意前面需要书写path的代码*/
+        'formData'     : {
+            'token'     : '{$token}'
+        },
+        'uploader'       : "{:U('Home/Upload/upLoad','','')}",
+        'swf'            : '__PUBLIC__/uploadify/uploadify.swf',
+        'script'         : "{:U('Home/Public/upLoad','','')}",
+        'cancelImg'      : '__PUBLIC__/uploadify/cancel.png',
+        'auto'           : true, //是否自动开始
+        'multi'          : false, //是否支持多文件上传
+        'buttonText'     : '上传LOGO', //按钮上的文字
+        'simUploadLimit' : 1, //一次同步上传的文件数目
+        'sizeLimit'      : 19871202, //设置单个文件大小限制
+        'queueSizeLimit' : 1, //队列中同时存在的文件个数限制
+        'fileDesc'       : '支持格式:jpg/gif/jpeg/png/bmp.', //如果配置了以下的'fileExt'属性，那么这个属性是必须的
+        'fileExt'        : '*.jpg;*.gif;*.jpeg;*.png;*.bmp',//允许的格式
+        onUploadSuccess :function(file,data,response){
+            data = eval('('+data+')');
+            if(data.status){
+                var html = '<img src="__ROOT__/Uploads/'+data.info+'" />';
+                $('#images').append(html);
+                $('#logo').val(data.info);
+            }
+         },
+        onError: function(event, queueID, fileObj) {
+            alert("文件:" + fileObj.name + "上传失败");
+        },
+        onCancel: function(event, queueID, fileObj){
+            alert("取消了" + fileObj.name);
+        }
+    });
+
+
+/*编辑器配置*/
+    window.UEDITOR_CONFIG.toolbars= [[
+            'fullscreen', 'source', '|', 'undo', 'redo', '|',
+            'bold', 'italic', 'underline', 'fontborder', 'strikethrough', 'superscript', 'subscript', 'removeformat', 'formatmatch', 'autotypeset', 'blockquote', 'pasteplain', '|', 'forecolor', 'backcolor', 'insertorderedlist', 'insertunorderedlist', 'selectall', 'cleardoc', '|',
+            'rowspacingtop', 'rowspacingbottom', 'lineheight', '|',
+            'customstyle', 'paragraph', 'fontfamily', 'fontsize', '|',
+            'directionalityltr', 'directionalityrtl', 'indent', '|',
+            'justifyleft', 'justifycenter', 'justifyright', 'justifyjustify', '|', 'touppercase', 'tolowercase', '|',
+            'link', 'unlink', 'anchor', '|', 'imagenone', 'imageleft', 'imageright', 'imagecenter', '|',
+            'simpleupload', 'insertimage', 'emotion', 'scrawl', 'insertvideo', 'music', 'attachment', 'map', 'gmap', 'insertframe', 'insertcode', 'webapp', 'pagebreak', 'template', 'background', '|',
+
+        ]]
+    /*实例化编辑器*/
+    var ue = UE.getEditor('container');
+
+	$('.button').click(function() {
+		var id = $('#id').val(),
+            sid = $('#store_id').val(),
+            title = $('#title').val(),
+            link = $('#link').val(),
+            logo = $('#logo').val(),
+            global = 0,
+            content = ue.getContent();
+
+        $(".global").each(function(){
+            if($(this).attr('checked')){
+                global =  $(this).val();
+            }
+        });
+
+        if (!tcheck(id,'','ID参数错误,请刷新页面')) { return false; }
+        if (!tcheck(sid,'','ID参数错误，请刷新页面')) { return false; }
+        if (!tcheck(title,'','标题不能为空')) { return false; }
+        if (!tcheck(link,'','链接不能为空')) { return false; }
+        if (!tcheck(content,'','内容不能为空')) { return false; }
+		wintq('正在添加，请稍后...',4,20000,0,'');
+		$.ajax({
+			url:"{:U('Home/Ad/editAd')}",
+			dataType:'json',
+			type:'POST',
+			data:{id:id,sid:sid,title:title,link:link,logo:logo,global:global,content:content},
+			success: function(data) {
+				if (data.status==1) {
+					wintq(data.info,1,1500,0,'parent');
+				}else {
+					wintq(data.info,3,1000,1,'');
+				}
+			}
+		});
+	});
+});
+</script>
+</head>
+<body>
+<div id="content">
+	<dl id="dl">
+    	<dt>添加广告</dt>
+        <dd>
+        	<span class="dd_left">所属门店：</span>
+            <span class="dd_right">
+            	<select name="store_id" id="store_id" class="select">
+                    <volist name='stores' id='list'>
+                    <option value="{$list.id}" <if condition="$list['id'] eq $ad_info['sid']"> selected </if> >{$list.store_name}</option>
+                    </volist>
+                </select><font>* 请选择广告对应的门店</font>
+            </span>
+        </dd>
+        <dd>
+        	<span class="dd_left">广告标题：</span>
+        	<span class="dd_right"><input type="text"  name="title" id="title" value="{$ad_info.title}" class="qtext"  /><font>*请输入广告标题</font></span>
+        </dd>
+        <dd>
+        	<span class="dd_left">广告链接：</span>
+        	<span class="dd_right"><input type="text"  name="link" id="link" value="{$ad_info.link}" class="qtext" maxlength="18" /><font>* 请输入一个完整的链接如：http://www.baidu.com</font></span>
+        </dd>
+        <dd>
+            <span class="dd_left">广告logo：</span>
+            <span class="dd_right"><input type="file" name="file" id="file" class="qtext" multiple="true" />
+            </span>
+            <span id="images" style="margin-left:10px;"><img src="/route/Uploads/{$ad_info.image}" ></span></span>
+        </dd>
+        <if condition="C('ADMIN_AUTH_KEY')">
+        <dd>
+            <span class="dd_left">是否全局：</span>
+            <span class="dd_right">
+                <input type="radio" name="global" class="global" <eq name="ad_info.global" value="1">checked</eq> value="1"   />是
+                <input type="radio" name="global" class="global" <eq name="ad_info.global" value="0">checked</eq> value="0"  />否
+            </span>
+            <span id="images" style="margin-left:10px;"></span>
+        </dd>
+        </if>
+        <!--<dd>-->
+            <!--<span class="dd_left">开始-结束时间：</span>-->
+            <!--<span class="dd_right"><input type="text" class="qtext" multiple="true" />--->
+            <!--<input type="text" class="qtext" multiple="true" /></span>-->
+        <!--</dd>-->
+        <dd>
+            <span class="dd_left">广告内容：</span>
+            <span class="dd_right">
+                 <!-- 加载编辑器的容器 -->
+                <script id="container" name="content" type="text/plain">
+                    {$ad_info.content|htmlspecialchars_decode}
+                </script>
+
+            </span>
+        </dd>
+        <input type="hidden" id="logo" value="" />
+        <input type="hidden" id="id" value="{$ad_info.id}" />
+        <dd><input type="button" class="button" value="提 交" /></dd>
+    </dl>
+</div>
+</body>
+</html>
